@@ -1,0 +1,12 @@
+type: "MARKDOWN_NOTE"
+folder: "531078bf774ccfb95067"
+title: "多段SCP"
+content: '''
+  # 多段SCP
+  
+  `scp -o 'ProxyCommand ssh [user]@[step] -W %h:%p' [user]@[target]:remote/path local/path`
+'''
+tags: []
+isStarred: false
+createdAt: "2017-05-11T02:36:36.600Z"
+updatedAt: "2017-05-16T05:44:50.894Z"

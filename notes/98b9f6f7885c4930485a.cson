@@ -1,0 +1,45 @@
+type: "MARKDOWN_NOTE"
+folder: "35765da909d18f51ca28"
+title: "ユーザー操作"
+content: '''
+  # ユーザー操作
+  
+  ## はじめに
+  接続DBをmysqlに変える
+  ```sql
+  use mysql;
+  ```
+  
+  
+  ## ユーザー確認
+  ```sql
+  select Host, User, Password from user;
+  ```
+  
+  ## 権限を表示
+  ```sql
+  show grants for 'hoge'@'%';
+  ```
+  
+  ## ユーザー作成
+  ```sql
+  CREATE USER user_name@host IDENTIFIED BY 'password';
+  ```
+  
+  ## 権限与える
+  ```sql
+  GRANT ALL PRIVILEGES ON `DB名`.テーブル TO 'ユーザ名'@'ホスト名';
+  GRANT SELECT,UPDATE,INSERT,DELETE ON `DB名`.テーブル TO 'ユーザ名'@'ホスト名';
+  ```
+  
+  ## 権限の反映
+  ```sql
+  FLUSH PRIVILEGES;
+  ```
+'''
+tags: [
+  "mysql"
+]
+isStarred: false
+createdAt: "2017-01-24T01:39:20.768Z"
+updatedAt: "2017-01-24T01:39:32.384Z"

@@ -1,0 +1,119 @@
+type: "MARKDOWN_NOTE"
+folder: "35765da909d18f51ca28"
+title: "MySQLのSelectの件数が多かった時に起きた問題"
+content: '''
+  # MySQLのSelectの件数が多かった時に起きた問題
+  
+  [MySQL＋Connector/Jを使って、大量データのSELECT⇒INSERTした時の挙動を確認する](http://d.hatena.ne.jp/Kazuhira/20151010/1444498210)
+  
+  ## 現象
+  200万件ほどのデータをDoma2のstrategyをstream指定で取得しようとした際に `OutOfMemoryError Java heap space` で落ちた。
+  
+  
+  ## 原因
+  Doma2の `PreparedStatement` を発行している `JdbcUtil.prepareStatement` の実装が以下のようになっていた
+  
+  ```Java
+  
+      public static PreparedStatement prepareStatement(Connection connection,
+              Sql<?> sql) {
+          try {
+              return connection.prepareStatement(sql.getRawSql());
+          } catch (SQLException e) {
+              throw new JdbcException(Message.DOMA2016, e, sql.getSqlFilePath(),
+                      sql.getRawSql(), e);
+          }
+      }
+  
+  ```
+  
+  引数のConnectionから受け取ったものに対してprepareStatementを第一引数だけで呼び出している。
+  デフォルトとしてMysqlのSelectの結果は全件をメモリに乗せようとしているために発生。
+  Doma2のstreamを使用していたとしても、これは変わらないためメモリが足りなくなってしまっていた。
+  
+  ## 対処
+  
+  対処法としてはPreapredStatementを発行する際にfetch sizeと、第二、第三引数に `ResultSet.TYPE_FORWARD_ONLY` と `ResultSet.CONCUR_READ_ONLY` を指定すればよいということが分かった。
+  
+  [5.2 JDBC API Implementation Notes](https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-implementation-notes.html)
+  
+  ただ、Doma2のPreparedStatementを発行する箇所にオプションなどが挟み込めない構造となっていたために、今回は自作クラスで拡張していく方針をとる。
+  
+  JdbcUtilを呼び出しているSelectCommandを拡張する。MysqlSelectCommandクラスを作成
+  
+  ```Java:MysqlSelectCommand.java
+  
+  public class MysqlSelectCommand<RESULT> extends SelectCommand<RESULT> {
+  
+  	public MysqlSelectCommand(SelectQuery query, ResultSetHandler<RESULT> resultSetHandler) {
+  		super(query, resultSetHandler);
+  	}
+  
+  	@Override
+  	public RESULT execute() {
+  		Supplier<RESULT> supplier = null;
+  		Connection connection = JdbcUtil.getConnection(query.getConfig()
+  				.getDataSource());
+  		try {
+  			PreparedStatement preparedStatement = connection.prepareStatement(sql.getRawSql(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+  			preparedStatement.setFetchSize(Integer.MIN_VALUE);
+  			try {
+  				log();
+  				setupOptions(preparedStatement);
+  				bindParameters(preparedStatement);
+  				supplier = executeQuery(preparedStatement);
+  			} catch (SQLException e) {
+  				Dialect dialect = query.getConfig().getDialect();
+  				throw new SqlExecutionException(query.getConfig()
+  						.getExceptionSqlLogType(), sql, e,
+  						dialect.getRootCause(e));
+  			} finally {
+  				close(supplier, () -> JdbcUtil.close(preparedStatement, query
+  						.getConfig().getJdbcLogger()));
+  			}
+  		} catch (SQLException e) {
+  			throw new JdbcException(Message.DOMA2016, e, sql.getSqlFilePath(), sql.getRawSql(), e);
+  		} finally {
+  			close(supplier, () -> JdbcUtil.close(connection, query.getConfig()
+  					.getJdbcLogger()));
+  		}
+  		return supplier.get();
+  	}
+  }
+  ```
+  
+  conectionを取得した際にJdbcUtil.preparedStatementを呼び出すのではなくそのままconnection.preparedStatementを呼び出し第二引数と第三引数を指定する。
+  preparedStatement.setFetchSize(Integer.MIN_VALUE)をしていする
+  
+  MysqlCommandImplementorsを作り、さっき作った MysqlSelectCommandを返すようにする
+  
+  ```Java:MysqlCommandImplementors.java
+  public interface MysqlCommandImplementors extends CommandImplementors {
+  	@Override
+  	default <RESULT> SelectCommand<RESULT> createSelectCommand(Method method, SelectQuery query, ResultSetHandler<RESULT> resultSetHandler) {
+  		return new MysqlSelectCommand<>(query, resultSetHandler);
+  	}
+  }
+  ```
+  
+  Configクラスを作成し、getCommandImplementorsを実装する。
+  
+  ```Java:DomaConfig.java
+  public class DomaConfig implements Config {
+  
+      @Override
+      public CommandImplementors getCommandImplementors() {
+          return new MysqlCommandImplementors(){};
+      }
+  }
+  ```
+'''
+tags: [
+  "MySQL"
+  "Doma"
+  "Java"
+]
+isStarred: false
+isTrashed: false
+createdAt: "2017-11-14T05:18:54.699Z"
+updatedAt: "2017-11-14T06:07:00.332Z"

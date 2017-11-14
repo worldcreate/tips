@@ -1,0 +1,22 @@
+type: "MARKDOWN_NOTE"
+folder: "667ff399f826301780f8"
+title: "マージの事前に衝突するか確認する"
+content: '''
+  # マージの事前に衝突するか確認する
+  
+  マージしてコミットせずに止める
+  ```bash
+  git merge master --no-commit
+  ```
+  
+  確認後ファイルを戻す
+  ```bash
+  git merge --abort
+  ```
+'''
+tags: [
+  "git"
+]
+isStarred: false
+createdAt: "2017-01-24T07:10:54.397Z"
+updatedAt: "2017-01-24T07:12:27.010Z"

@@ -1,0 +1,25 @@
+{
+  "folders": [
+    {
+      "key": "35765da909d18f51ca28",
+      "color": "#3FD941",
+      "name": "DB"
+    },
+    {
+      "key": "667ff399f826301780f8",
+      "color": "#B013A4",
+      "name": "command"
+    },
+    {
+      "key": "531078bf774ccfb95067",
+      "color": "#3FD941",
+      "name": "Linux"
+    },
+    {
+      "key": "d817fdf0b5f00087af08",
+      "color": "#B013A4",
+      "name": "Java"
+    }
+  ],
+  "version": "1.0"
+}

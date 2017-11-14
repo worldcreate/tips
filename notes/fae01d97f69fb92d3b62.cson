@@ -1,0 +1,33 @@
+type: "MARKDOWN_NOTE"
+folder: "35765da909d18f51ca28"
+title: "カラム操作"
+content: '''
+  # カラム操作
+  
+  ## カラムにコメントを追加
+  ```sql
+  alter table test modify message varchar(200) comment 'カラムのコメント(修正)';
+  ```
+  
+  ## カラム削除
+  ```sql
+  ALTER TABLE テーブル名 DROP COLUMN カラム名;
+  ```
+  
+  ## カラム追加(任意の位置)
+  ```sql
+  ALTER TABLE `テーブル名'
+      ADD COLUMN `追加カラム名' `カラム型' COMMENT 'コメント' [FIRST | AFTER] `カラム名'
+  ```
+  
+  ## カラム変更
+  ```sql
+  ALTER TABLE テーブル名 CHANGE old_column_name new_column_name column_info;
+  ```
+'''
+tags: [
+  "mysql"
+]
+isStarred: false
+createdAt: "2017-01-24T01:40:04.351Z"
+updatedAt: "2017-01-24T01:40:10.521Z"
